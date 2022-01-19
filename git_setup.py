@@ -10,8 +10,8 @@ REPO = {
     'bikbucket': 'bitbucket.org'
 }
 GLOBAL_CONFIG = """
-[includeIf "gitdir:{project_path}{project_name}"]
-    path = ~/.gitconfigs/.gitconfig-{project_name}
+[includeIf "gitdir:{projects_path}"]
+    path = ~/.gitconfigs/.gitconfig-{client_name}
 """
 PROJECT_CONFIG = """
 [core]
@@ -23,19 +23,20 @@ PROJECT_CONFIG = """
     email = {email}
 """
 SSH_CONFIG = """
-Host {project_name}.{repo_host}
+Host {client_name}.{repo_host}
     HostName {repo_host}
     User git
-    IdentityFile ~/.ssh/id_rsa_{project_name}
+    IdentityFile ~/.ssh/id_rsa_{client_name}
 """
 
 
 def main():
     repo = input("Enter repo (github/gitlab/bitbucket): ")
-    project_path = (input(
-        "Enter project root path without project name eg. ~/PycharmProjects/ABC/ (check forward-slash in the end): "
+    client_name = input("Enter client's name eg client1: ")
+    projects_path = (input(
+        ("Enter client's projects root path without project name eg. ~/PycharmProjects/client1/ "
+         "(check forward-slash in the end): ")
     ) or "/")
-    project_name = input("Enter project name: ")
     username = input("Enter username: ")
     email = input("Enter email: ")
 
@@ -43,44 +44,44 @@ def main():
     # Global Config
     if os.path.exists(os.path.join(HOME_DIR, PREFIX, ".gitconfig")):
         with open(os.path.join(HOME_DIR, PREFIX, ".gitconfig"), 'a', encoding='utf-8') as file:
-            file.write(GLOBAL_CONFIG.format(project_name=project_name, project_path=project_path))
+            file.write(GLOBAL_CONFIG.format(projects_path=projects_path, client_name=client_name))
     else:
         with open(os.path.join(HOME_DIR, PREFIX, ".gitconfig"), 'w', encoding='utf-8') as file:
-            file.write(GLOBAL_CONFIG.format(project_name=project_name, project_path=project_path))
+            file.write(GLOBAL_CONFIG.format(projects_path=projects_path, client_name=client_name))
         os.chmod(os.path.join(HOME_DIR, PREFIX, ".gitconfig"), 0o644)
     # Project Config
     if os.path.exists(os.path.join(HOME_DIR, PREFIX, ".gitconfigs")):
-        with open(os.path.join(HOME_DIR, PREFIX, f".gitconfigs/.gitconfig-{project_name}"), 'w',
+        with open(os.path.join(HOME_DIR, PREFIX, f".gitconfigs/.gitconfig-{client_name}"), 'w',
                   encoding='utf-8') as file:
             file.write(PROJECT_CONFIG.format(username=username, email=email))
         os.chmod(os.path.join(
-            HOME_DIR, PREFIX, f".gitconfigs/.gitconfig-{project_name}"), 0o644)
+            HOME_DIR, PREFIX, f".gitconfigs/.gitconfig-{client_name}"), 0o644)
     else:
         os.mkdir(os.path.join(HOME_DIR, PREFIX, ".gitconfigs"))
-        with open(os.path.join(HOME_DIR, PREFIX, f".gitconfigs/.gitconfig-{project_name}"), 'w',
+        with open(os.path.join(HOME_DIR, PREFIX, f".gitconfigs/.gitconfig-{client_name}"), 'w',
                   encoding='utf-8') as file:
             file.write(PROJECT_CONFIG.format(username=username, email=email))
         os.chmod(os.path.join(
-            HOME_DIR, PREFIX, f".gitconfigs/.gitconfig-{project_name}"), 0o644)
+            HOME_DIR, PREFIX, f".gitconfigs/.gitconfig-{client_name}"), 0o644)
     # SSH Config
     if os.path.exists(os.path.join(HOME_DIR, PREFIX, ".ssh/config")):
         with open(os.path.join(HOME_DIR, PREFIX, ".ssh/config"), 'a', encoding='utf-8') as file:
-            file.write(SSH_CONFIG.format(project_name=project_name, repo_host=repo_host))
+            file.write(SSH_CONFIG.format(client_name=client_name, repo_host=repo_host))
     else:
         with open(os.path.join(HOME_DIR, PREFIX, ".ssh/config"), 'w', encoding='utf-8') as file:
-            file.write(SSH_CONFIG.format(project_name=project_name, repo_host=repo_host))
+            file.write(SSH_CONFIG.format(client_name=client_name, repo_host=repo_host))
 
     # Generate RSA Keys
     key = RSA.generate(2048)
-    with open(os.path.join(HOME_DIR, PREFIX, f".ssh/id_rsa_{project_name}"), 'wb') as content_file:
+    with open(os.path.join(HOME_DIR, PREFIX, f".ssh/id_rsa_{client_name}"), 'wb') as content_file:
         os.chmod(os.path.join(
-            HOME_DIR, PREFIX, f".ssh/id_rsa_{project_name}"), 0o600)
+            HOME_DIR, PREFIX, f".ssh/id_rsa_{client_name}"), 0o600)
         content_file.write(key.exportKey('PEM'))
     pubkey = key.publickey()
-    with open(os.path.join(HOME_DIR, PREFIX, f".ssh/id_rsa_{project_name}.pub"), 'wb') as content_file:
+    with open(os.path.join(HOME_DIR, PREFIX, f".ssh/id_rsa_{client_name}.pub"), 'wb') as content_file:
         content_file.write(pubkey.exportKey('OpenSSH'))
 
-    os.system(f'ssh-add ~/.ssh/id_rsa_{project_name}')
+    os.system(f'ssh-add ~/.ssh/id_rsa_{client_name}')
     print('Id RSA public Key\n', pubkey.exportKey('OpenSSH'))
 
 
